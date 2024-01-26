@@ -94,9 +94,22 @@ public class ProductService implements IProductService{
                 savedProduct.setImageUrl(product.getImageUrl());
             }
 
-            if (product.getCategoryList() !=null ){
-                savedProduct.setCategoryList(product.getCategoryList());
-            }
+           if (product.getCategoryList() != null && !product.getCategoryList().isEmpty()) {
+
+               List<Category> categoryList1 = new ArrayList<>();
+
+               for (Category category : product.getCategoryList()) {
+                   List<Category> categories = categoryRepository.findByName(category.getName());
+
+                   if (!categories.isEmpty()) {
+                       categoryList1.add(categories.get(0));
+                   } else {
+                       categoryList1.add(categoryRepository.save(category));
+                   }
+               }
+
+               savedProduct.setCategoryList(categoryList1); // Update savedProduct's categoryList
+           }
             
             return productRepository.save(savedProduct);
       }
