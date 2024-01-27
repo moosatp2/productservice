@@ -1,5 +1,6 @@
 package com.example.productservice.controllers;
 
+import com.example.productservice.exceptions.ProductNotExistException;
 import com.example.productservice.models.Product;
 import com.example.productservice.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,8 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Product>> getSingleProduct(@PathVariable("id") Long id) {
+    public ResponseEntity<Optional<Product>> getSingleProduct(
+            @PathVariable("id") Long id) throws ProductNotExistException {
         ResponseEntity<Optional<Product>> productResponseEntity =
                 new ResponseEntity<>(productService.getSingleProduct(id), HttpStatus.OK);
         return productResponseEntity;
@@ -43,7 +45,7 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable("id") Long id, @RequestBody Product product) {
+    public ResponseEntity<Product> updateProduct(@PathVariable("id") Long id, @RequestBody Product product) throws ProductNotExistException {
 
         ResponseEntity updateResponse =
                 new ResponseEntity(productService.updateProduct(id, product), HttpStatus.OK);

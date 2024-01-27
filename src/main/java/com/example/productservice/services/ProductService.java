@@ -1,5 +1,6 @@
 package com.example.productservice.services;
 
+import com.example.productservice.exceptions.ProductNotExistException;
 import com.example.productservice.models.Category;
 import com.example.productservice.models.Product;
 import com.example.productservice.repositories.CategoryRepository;
@@ -36,8 +37,11 @@ public class ProductService implements IProductService{
     }
 
     @Override
-    public Optional<Product> getSingleProduct(Long id) {
+    public Optional<Product> getSingleProduct(Long id) throws ProductNotExistException {
         Optional<Product> product = productRepository.findById(id);
+        if(product.isEmpty()){
+            throw new ProductNotExistException("no product exist with id: " +id);
+        }
         return product;
     }
 
@@ -70,10 +74,12 @@ public class ProductService implements IProductService{
     }
 
     @Override
-    public Product updateProduct(Long id, Product product) {
+    public Product updateProduct(Long id, Product product) throws ProductNotExistException {
 
         Optional<Product> optionalProduct = productRepository.findById(id);
-
+        if(optionalProduct.isEmpty()){
+            throw new ProductNotExistException("Product  not exist with id: " + id);
+        }
        if (optionalProduct.isPresent()) {
 
             Product savedProduct = optionalProduct.get();
