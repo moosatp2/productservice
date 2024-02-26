@@ -1,5 +1,7 @@
 package com.example.productservice.services;
 
+import com.example.productservice.configs.RedisConfig;
+import com.example.productservice.dtos.ProductDTO;
 import com.example.productservice.exceptions.ProductNotExistException;
 import com.example.productservice.models.Category;
 import com.example.productservice.models.Product;
@@ -7,6 +9,7 @@ import com.example.productservice.repositories.CategoryRepository;
 import com.example.productservice.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.swing.text.html.Option;
@@ -22,11 +25,14 @@ public class ProductService implements IProductService{
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+
     private List<Category> categoryList;
     @Autowired
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, RedisTemplate<String, Object> redisTemplate) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.redisTemplate = redisTemplate;
 
         this.categoryList = new ArrayList<>();
     }
@@ -37,13 +43,36 @@ public class ProductService implements IProductService{
     }
 
     @Override
-    public Optional<Product> getSingleProduct(Long id) throws ProductNotExistException {
-        Optional<Product> product = productRepository.findById(id);
-        if(product.isEmpty()){
+    public Optional<ProductDTO> getSingleProduct(Long id) throws ProductNotExistException {
+
+        ProductDTO p = (ProductDTO) redisTemplate.opsForHash().get("PRODUCTS", "PRODUCT_" + id);
+
+        if (p != null ){
+
+            return Optional.of(p);
+        }
+
+        Optional<Product> productOptional = productRepository.findById(id);
+        if(productOptional.isEmpty()){
             throw new ProductNotExistException("no product exist with id: " +id);
         }
-        return product;
+        Product product = productOptional.get();
+        product.getCategoryList().size();
+
+        ProductDTO productDTO = convertToDTO(product);
+
+        redisTemplate.opsForHash().put("PRODUCTS", "PRODUCT_" + id, productDTO);
+        return Optional.of(productDTO);
     }
+    private ProductDTO convertToDTO(Product product) {
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setId(product.getId());
+        productDTO.setTitle(product.getTitle());
+        productDTO.setDescription(product.getDescription());
+        productDTO.setPrice(product.getPrice());
+        return productDTO;
+    }
+
 
     @Override
     public Product addNewProduct(Product product) {

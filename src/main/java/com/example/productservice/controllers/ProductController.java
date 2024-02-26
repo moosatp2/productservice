@@ -1,5 +1,6 @@
 package com.example.productservice.controllers;
 
+import com.example.productservice.dtos.ProductDTO;
 import com.example.productservice.exceptions.ProductNotExistException;
 import com.example.productservice.models.Product;
 import com.example.productservice.services.ProductService;
@@ -29,9 +30,9 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Product>> getSingleProduct(
+    public ResponseEntity<Optional<ProductDTO>> getSingleProduct(
             @PathVariable("id") Long id) throws ProductNotExistException {
-        ResponseEntity<Optional<Product>> productResponseEntity =
+        ResponseEntity<Optional<ProductDTO>> productResponseEntity =
                 new ResponseEntity<>(productService.getSingleProduct(id), HttpStatus.OK);
         return productResponseEntity;
     }
